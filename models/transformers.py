@@ -18,7 +18,7 @@ class MultiHeadAttention(nn.Module):
         self.h = h
         
         # Linear projections for query, key, value for each head
-        self.heads_list = nn.ModuleDict({
+        self.heads_dict = nn.ModuleDict({
             f"head_{k}": nn.ModuleDict({"q":nn.Linear(d_model, d_model),
                               "k":nn.Linear(d_model, d_model),
                               "v":nn.Linear(d_model, d_model)}) for k in range(h)
@@ -26,13 +26,25 @@ class MultiHeadAttention(nn.Module):
         # Projection of heads concatenation and dropout
         self.w_o = nn.Linear(d_model*h, d_model)
         
-    def forward(self, x:torch.tensor, mask = None):
+    def forward(self, x:torch.tensor, x_dec:Optional[torch.tensor] = None,
+                mask:Optional[torch.tensor] = None):
+        """
+        Arguments
+        ---------
+        x: torch.tensor
+            Embedded sequence of shape BxSxE (B-batch size, S-sequence length, E-embedding dim)
+        x_dec: torch.tensor
+            Sequence from encoder
+        mask: torch.tensor
+            Tensor of shape S2xS2 representing casual masking
+        """
         batch_size, seq_len, _ = x.shape
         
         # Calculating projections for each head
         proj_dict = {}
-        for head_ind, head in self.heads_list.items():
-            proj_dict[head_ind] = {"q": head["q"](x), "k": head["k"](x),
+        for head_ind, head in self.heads_dict.items():
+            proj_dict[head_ind] = {"q": head["q"](x if x_dec is None else x_dec),
+                                   "k": head["k"](x if x_dec is None else x_dec),
                                    "v": head["v"](x)}
         
         # Calculate values with attention for further cancatenation
@@ -142,6 +154,44 @@ class TransformerEncoder(nn.Module):
         x = self.norm(x)
         
         return x
+
+
+
+class TransformerDecoderLayer(TransformerEncoderLayer):
+    def __init__(self, d_model, d_feedforward, h, dropout=0.1, mask:Optional[torch.tensor] = None):
+        super().__init__(d_model, d_feedforward, h, dropout)
+        self.mask = mask
+        self.masked_mha = MultiHeadAttention(d_model, h, dropout)
+        self.norm3 = nn.LayerNorm(d_model)
+        self.dropout3 = nn.Dropout(dropout)
+    
+    def forward(self, x, mask=None):
+        masked_mha_output = self.masked_mha(x, mask=self.mask)
+        masked_mha_output = self.dropout3(masked_mha_output)
+        masked_mha_output = self.norm3(x + masked_mha_output)
+        # Multi-head attention with residual connection and normalization
+        mha_output = self.mha(masked_mha_output)
+        mha_output = self.dropout1(mha_output)
+        mha_output = self.norm1(masked_mha_output + mha_output)
+        # Feed-forward with residual connection and normalization
+        ff_output = self.feed_forward(mha_output)
+        ff_output = self.dropout2(ff_output) 
+        ff_output = self.norm2(mha_output + ff_output)  # Residual connection + layer norm
+        return ff_output
+
+class TransformerDecoder(TransformerEncoder):
+    def __init__(self, vocab_size:int, max_seq_len:int, d_model:int, d_feedforward:int,
+                 h:int, num_layers:int, dropout: float = 0.1, mask: bool = True):
+        
+        super().__init__(vocab_size, max_seq_len, d_model, d_feedforward,
+                         h, num_layers, dropout)
+        
+        self.mask = torch.triu(torch.ones(max_seq_len, max_seq_len)).T if mask else None
+        # Decoder layers
+        self.layers = nn.ModuleList([
+            TransformerDecoderLayer(d_model, d_feedforward, h, dropout, mask=self.mask)
+            for _ in range(num_layers)
+        ])
     
 
 
@@ -152,4 +202,12 @@ if __name__ == "__main__":
     ff = PositionwiseFeedForward(256, 1024, 0.3)
     trans = TransformerEncoder(vocab_size=10, max_seq_len=20, d_model=256, d_feedforward=1024, h=4, num_layers=3, dropout=0.35)
     x = torch.randint(0, 10, size=(32, 19))
-    print(trans(x).shape)
+    print(trans(x).shape, end = '\n\n')
+
+    x = torch.randn(32, 18, 256)
+    decoder_layer = TransformerDecoderLayer(256, 128, 8, dropout=0.15, mask=torch.triu(torch.ones(18, 18)).T)
+    print(decoder_layer(x).shape, end='\n\n')
+
+    x = torch.randint(0, 10, size=(32, 20))
+    trans_dec = TransformerDecoder(vocab_size=10, max_seq_len=20, d_model=256, d_feedforward=128, h=4, num_layers=3, dropout=0.35)
+    print(trans_dec(x).shape)
