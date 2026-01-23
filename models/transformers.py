@@ -158,19 +158,21 @@ class TransformerEncoder(nn.Module):
 
 
 class TransformerDecoderLayer(TransformerEncoderLayer):
-    def __init__(self, d_model, d_feedforward, h, dropout=0.1, mask:Optional[torch.tensor] = None):
+    def __init__(self, d_model, d_feedforward, h, dropout=0.35,
+                 mask:Optional[torch.tensor] = None, x_dec:Optional[torch.tensor] = None):
         super().__init__(d_model, d_feedforward, h, dropout)
         self.mask = mask
-        self.masked_mha = MultiHeadAttention(d_model, h, dropout)
+        self.x_dec = x_dec
+        self.masked_mha = MultiHeadAttention(d_model, h)
         self.norm3 = nn.LayerNorm(d_model)
         self.dropout3 = nn.Dropout(dropout)
     
-    def forward(self, x, mask=None):
+    def forward(self, x:torch.tensor):
         masked_mha_output = self.masked_mha(x, mask=self.mask)
         masked_mha_output = self.dropout3(masked_mha_output)
         masked_mha_output = self.norm3(x + masked_mha_output)
         # Multi-head attention with residual connection and normalization
-        mha_output = self.mha(masked_mha_output)
+        mha_output = self.mha(masked_mha_output, x_dec=self.x_dec)
         mha_output = self.dropout1(mha_output)
         mha_output = self.norm1(masked_mha_output + mha_output)
         # Feed-forward with residual connection and normalization
@@ -181,15 +183,15 @@ class TransformerDecoderLayer(TransformerEncoderLayer):
 
 class TransformerDecoder(TransformerEncoder):
     def __init__(self, vocab_size:int, max_seq_len:int, d_model:int, d_feedforward:int,
-                 h:int, num_layers:int, dropout: float = 0.1, mask: bool = True):
+                 h:int, num_layers:int, dropout: float = 0.1, mask: bool = True,
+                 x_dec:Optional[torch.tensor] = None):
         
         super().__init__(vocab_size, max_seq_len, d_model, d_feedforward,
                          h, num_layers, dropout)
-        
         self.mask = torch.triu(torch.ones(max_seq_len, max_seq_len)).T if mask else None
         # Decoder layers
         self.layers = nn.ModuleList([
-            TransformerDecoderLayer(d_model, d_feedforward, h, dropout, mask=self.mask)
+            TransformerDecoderLayer(d_model, d_feedforward, h, dropout, mask=self.mask, x_dec=x_dec)
             for _ in range(num_layers)
         ])
     
@@ -204,10 +206,10 @@ if __name__ == "__main__":
     x = torch.randint(0, 10, size=(32, 19))
     print(trans(x).shape, end = '\n\n')
 
-    # x = torch.randn(32, 18, 256)
-    # decoder_layer = TransformerDecoderLayer(256, 128, 8, dropout=0.15, mask=torch.triu(torch.ones(18, 18)).T)
-    # print(decoder_layer(x).shape, end='\n\n')
+    x = torch.randn(32, 18, 256)
+    decoder_layer = TransformerDecoderLayer(256, 128, 8, dropout=0.15, mask=torch.triu(torch.ones(18, 18)).T)
+    print(decoder_layer(x).shape, end='\n\n')
 
-    # x = torch.randint(0, 10, size=(32, 20))
-    # trans_dec = TransformerDecoder(vocab_size=10, max_seq_len=20, d_model=256, d_feedforward=128, h=4, num_layers=3, dropout=0.35)
-    # print(trans_dec(x).shape)
+    x = torch.randint(0, 10, size=(32, 20))
+    trans_dec = TransformerDecoder(vocab_size=10, max_seq_len=20, d_model=256, d_feedforward=128, h=4, num_layers=3, dropout=0.35)
+    print(trans_dec(x).shape)
