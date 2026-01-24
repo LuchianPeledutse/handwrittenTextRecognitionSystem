@@ -3,6 +3,8 @@ from typing import Tuple
 
 from tqdm import tqdm
 
+import Levenshtein as lev
+
 import datasets
 
 import torch
@@ -87,5 +89,24 @@ class StatsCalc:
         """
         with open(path, 'wb') as pickle_file:
             pickle.dump(self.statistics, pickle_file)
+
+
+
+def cer_metric(gt: str, pred: str) -> float:
+    """
+    Arguments
+    ---------
+    gt: str
+        Ground truth string
+    pred: str
+        Predicted string
+    
+    Returns
+    -------
+    levenstein_distance
+    """
+    distance = lev.distance(gt, pred)
+    levenstein_distance = distance / len(gt)
+    return levenstein_distance
 '--------------------------------------------------------------------------------'
 
