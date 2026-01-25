@@ -22,13 +22,14 @@ class ModelInference:
     def __init__(self, model: nn.Module, transformations: transforms.transforms.Compose,
                  tokenizer: PreTrainedTokenizerFast, split: ViTSplit,
                  soft_func: Callable[[torch.tensor], torch.tensor] = nn.Softmax(dim=-1),
-                 device: str = 'cpu'):
+                 max_seq_length:int = 86, device: str = 'cpu'):
         self.model = model
         self.split = split
         self.device = device
         self.soft_func = soft_func
         self.tokenizer = tokenizer
         self.transform = transformations
+        self.max_seq_length = max_seq_length
     
     @property
     def sos(self):
@@ -66,7 +67,7 @@ class ModelInference:
         encoder_features = self.encoder(flattened_patches)
         # Generate index by index
         gen_indecies = [self.sos]
-        while gen_indecies[-1] != self.eos:
+        while gen_indecies[-1] != self.eos and len(gen_indecies) < self.max_seq_length:
             N_seq = len(gen_indecies)
             tensor_indecies = torch.tensor(gen_indecies, dtype=torch.long).unsqueeze(dim=0)
             # Each time depending on sequence length the decoder mask dimension has to be changed accordingly
