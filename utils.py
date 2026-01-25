@@ -108,5 +108,29 @@ def cer_metric(gt: str, pred: str) -> float:
     distance = lev.distance(gt, pred)
     levenstein_distance = distance / len(gt)
     return levenstein_distance
+
+
+class EarlyStopping:
+    def __init__(self, patience: int = 5):
+        self.patience = patience
+        self.memory = []
+    
+    def add(self, value: float) -> None:
+        """
+        Adds value to memory
+        """
+        self.memory.append(value)
+    
+    def should_stop(self) -> bool:
+        if len(self.memory) < self.patience + 1:
+            return False
+        else:
+            last_patience_memory = self.memory[-(self.patience+1):]
+            for ind in range(len(last_patience_memory)-1):
+                current_value = last_patience_memory[ind]
+                next_value = last_patience_memory[ind+1]
+                if next_value > current_value:
+                    return False
+            return True
 '--------------------------------------------------------------------------------'
 
