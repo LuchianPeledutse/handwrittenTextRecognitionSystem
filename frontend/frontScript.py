@@ -11,6 +11,8 @@ import streamlit as st
 pillow_heif.register_heif_opener()
 
 
+INFERENCE_ENDPOINT = "http://127.0.0.1:8000/prediction"  
+
 
 # Streamlit App Config
 st.set_page_config(
@@ -60,9 +62,10 @@ if uploaded_file is not None:
     if st.button("Predict"):
         with st.spinner("Sending image to model and getting prediction..."):
             try:
+                prediction = requests.post(INFERENCE_ENDPOINT, json={"image_64_base": image_64}).json()
                 st.success("✅ Prediction received!")
                 st.subheader("Generated text:")
-                st.write(f"**{image_64}**")
+                st.write(f"**{prediction}**")
             except Exception as e:
                 st.error(f"Request failed: {e}")
 
