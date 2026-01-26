@@ -83,7 +83,7 @@ class ModelInference:
             gen_indecies.append(generated_token)
         return self.tokenizer.decode(gen_indecies, skip_special_tokens=True)
 
-'--------------------------------------------------------------------------------'
+
     
 
 
