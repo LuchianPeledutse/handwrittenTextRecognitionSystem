@@ -1,10 +1,16 @@
 OCR with Vision Transformer (ViT) 
 
-:pushpin: Overview  
+# Overview :pushpin: 
 This project implements a Vision Transformer for Optical Character Recognition (OCR) system for handwritten text recognition. The model achieves a Character Error Rate (CER) of less than 10% on the validation set, demonstrating strong performance in transcribing handwritten text.
 
-:gear: Data Processing
+## Data Processing :gear:
+...
 
-:hammer: Training
-1. Make sure you have c++ build tools installed
-2. Download PyTorch with cuda following the link: https://pytorch.org/get-started/locally/ 
+## Training :hammer:
+1. Download the dataset running the script load_handwritten_dataset.py
+2. Make sure you have c++ build tools installed. You can install them [here](https://visualstudio.microsoft.com/ru/downloads/)
+3. Make sure you have PyTorch with cuda installed. You can install them [here](https://pytorch.org/get-started/locally/)
+4. Edit the training notebook (e.g. changing environmental variables, training config, etc.) and run training
+
+## Inference examples :checkered_flag:
+...
