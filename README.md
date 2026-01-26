@@ -10,10 +10,10 @@ This project implements a Vision Transformer for Optical Character Recognition (
 2. Then we resize picture to shape (128 x 256)    
 ![resized_image](./images/picture_resized.png)
 
-3. We calculate mean and std over all dataset beforehand. We further normalize each instance using these statistics.    
+3. We calculate mean and std over all dataset beforehand. We further normalize each instance using these statistics    
 ![resized_and_normalized_image](./images/resized_and_normalized.png)
 
-4. Transformer encoder expects a sequence. For ViT we split this image into patches of shapes (128 x 4)    
+4. Transformer encoder expects a sequence. For ViT we split this image into patches of shapes (128 x 4) which are further flattened        
 ![splitted_image](./images/splitted_picture.png)
 
 ## Training :hammer:
