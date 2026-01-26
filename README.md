@@ -4,7 +4,8 @@ OCR with Vision Transformer (ViT)
 This project implements a Vision Transformer for Optical Character Recognition (OCR) system for handwritten text recognition. The model achieves a Character Error Rate (CER) of less than 10% on the validation set, demonstrating strong performance in transcribing handwritten text.
 
 ## Data Processing :gear:
-...
+1. First we have initial picture
+![raw image](./images/default_picture.png)
 
 ## Training :hammer:
 1. Download the dataset running the script load_handwritten_dataset.py
