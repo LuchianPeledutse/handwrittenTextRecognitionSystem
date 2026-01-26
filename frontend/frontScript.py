@@ -11,7 +11,7 @@ import streamlit as st
 pillow_heif.register_heif_opener()
 
 
-INFERENCE_ENDPOINT = "http://127.0.0.1:8000/prediction"  
+INFERENCE_ENDPOINT = "http://127.0.0.1:8001/prediction"
 
 
 # Streamlit App Config
