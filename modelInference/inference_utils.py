@@ -89,7 +89,7 @@ class ModelInference:
         self.update_decoder_mask(self.initial_mask)
         return self.tokenizer.decode(gen_indecies, skip_special_tokens=True)
 
-'--------------------------------------------------------------------------------'
+
     
 
 
