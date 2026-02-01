@@ -95,14 +95,16 @@ class TransformerEncoderLayer(nn.Module):
         
     def forward(self, x: torch.tensor, x_dec: Optional[torch.tensor] = None):
         # Multi-head attention with residual connection and normalization
-        mha_output = self.mha(x)
+        y = self.norm1(x)
+        mha_output = self.mha(y)
         mha_output = self.dropout1(mha_output)
-        x = self.norm1(x + mha_output)
+        x = x + mha_output
         
         # Feed-forward with residual connection and normalization
-        ff_output = self.feed_forward(x)
+        y = self.norm2(x)
+        ff_output = self.feed_forward(y)
         ff_output = self.dropout2(ff_output) 
-        x = self.norm2(x + ff_output)  # Residual connection + layer norm
+        x = x + ff_output  # Residual connection + layer norm
         return x
     
 
@@ -167,18 +169,21 @@ class TransformerDecoderLayer(TransformerEncoderLayer):
         self.norm3 = nn.LayerNorm(d_model)
         self.dropout3 = nn.Dropout(dropout)
     
-    def forward(self, x:torch.tensor, x_dec:Optional[torch.tensor]):
-        masked_mha_output = self.masked_mha(x, mask=self.mask)
+    def forward(self, x:torch.tensor, x_dec:Optional[torch.tensor] = None):
+        y = self.norm3(x)
+        masked_mha_output = self.masked_mha(y, mask=self.mask)
         masked_mha_output = self.dropout3(masked_mha_output)
-        masked_mha_output = self.norm3(x + masked_mha_output)
+        x = x + masked_mha_output
         # Multi-head attention with residual connection and normalization
-        mha_output = self.mha(masked_mha_output, x_dec=x_dec)
+        y = self.norm1(x)
+        mha_output = self.mha(y, x_dec=x_dec)
         mha_output = self.dropout1(mha_output)
-        mha_output = self.norm1(masked_mha_output + mha_output)
+        x = x + mha_output
         # Feed-forward with residual connection and normalization
-        ff_output = self.feed_forward(mha_output)
+        y = self.norm2(x)
+        ff_output = self.feed_forward(y)
         ff_output = self.dropout2(ff_output) 
-        ff_output = self.norm2(mha_output + ff_output)  # Residual connection + layer norm
+        x = x + ff_output  # Residual connection + layer norm
         return ff_output
 
 class TransformerDecoder(TransformerEncoder):
@@ -210,5 +215,5 @@ if __name__ == "__main__":
     print(decoder_layer(x).shape, end='\n\n')
 
     x = torch.randint(0, 10, size=(32, 20))
-    trans_dec = TransformerDecoder(vocab_size=10, max_seq_len=20, d_model=256, d_feedforward=128, h=4, num_layers=3, dropout=0.35)
+    trans_dec = TransformerDecoder(vocab_size=10, max_seq_len=20, d_model=256, d_feedforward=128, h=4, num_layers=3, dropout=0.35, mask_device='cpu')
     print(trans_dec(x).shape)
