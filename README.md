@@ -3,11 +3,13 @@ OCR with Vision Transformer (ViT)
 # Overview :pushpin: 
 This project implements a Transformer Encoder-decoder architecture for learning purposes. In this project I also finetune a pretrained tr-ocr model for names recognition task to get some hands-on experience with training. 
 
-## Data Processing of trocr model:gear:
-1. First we have initial picture    
+## Data Processing of trocr model :gear:
+1. First we have initial picture
+
 ![raw image](./images/default_picture.png)
 
 2. We then use trocr processor to transform the picture
+
 ![transformed_plicture](./images/processed_picture.png)
 
 ## Training :hammer:
