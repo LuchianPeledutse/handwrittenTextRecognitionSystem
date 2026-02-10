@@ -19,4 +19,12 @@ This project implements a Transformer Encoder-decoder architecture for learning 
 4. Edit the training notebook (e.g. changing environmental variables, training config, etc.) and run training
 
 ## Inference examples :checkered_flag:
-...
+
+![mary](./images/mary_inf.png)
+
+![james](./images/james_inf.png)
+
+![ava](./images/ava_inf.png)
+
+![amelia](./images/amelia_inf.png)
+
